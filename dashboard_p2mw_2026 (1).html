@@ -1,0 +1,514 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dashboard Catatan Review P2MW 2026 – UNNES</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&family=Fraunces:ital,wght@0,400;0,600;1,400&display=swap');
+  :root{
+    --bg:#f4f0eb;--surface:#fffdf9;--surface2:#fdf8f2;
+    --primary:#5b7fa6;--primary-soft:#dce8f5;
+    --accent:#d97d54;--green:#6b9e78;--green-soft:#e0f0e5;
+    --yellow:#c9a84c;--yellow-soft:#fdf3da;
+    --text:#2d2d2d;--text2:#666;--text3:#999;
+    --border:#e8e0d8;--shadow:0 2px 12px rgba(0,0,0,0.07);
+    --shadow-md:0 4px 24px rgba(0,0,0,0.10);
+    --radius:16px;--radius-sm:10px;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;}
+
+  .header{background:linear-gradient(135deg,#4a6fa5 0%,#6b9e78 100%);color:#fff;padding:36px 40px 32px;position:relative;overflow:hidden;}
+  .header::before{content:'';position:absolute;top:-60px;right:-60px;width:240px;height:240px;border-radius:50%;background:rgba(255,255,255,0.08);}
+  .header::after{content:'';position:absolute;bottom:-40px;left:30%;width:180px;height:180px;border-radius:50%;background:rgba(255,255,255,0.05);}
+  .header-inner{max-width:1280px;margin:0 auto;position:relative;z-index:1;}
+  .header-badge{display:inline-block;background:rgba(255,255,255,0.2);border:1px solid rgba(255,255,255,0.35);border-radius:20px;padding:4px 14px;font-size:12px;font-weight:600;letter-spacing:0.04em;margin-bottom:12px;text-transform:uppercase;}
+  .header h1{font-family:'Fraunces',serif;font-size:clamp(22px,3.5vw,36px);font-weight:600;line-height:1.2;margin-bottom:8px;}
+  .header-sub{font-size:14px;opacity:0.85;}
+  .header-meta{margin-top:20px;display:flex;gap:24px;flex-wrap:wrap;}
+  .header-meta-item{display:flex;align-items:center;gap:8px;}
+  .header-meta-item .dot{width:8px;height:8px;border-radius:50%;background:rgba(255,255,255,0.7);flex-shrink:0;}
+  .header-meta-item span{font-size:13px;opacity:0.9;}
+  .notice-banner{background:#fff8e6;border-left:4px solid var(--yellow);padding:14px 20px;margin:24px 0 0;border-radius:0 var(--radius-sm) var(--radius-sm) 0;font-size:13px;color:#7a5a00;line-height:1.6;}
+  .notice-banner strong{display:block;margin-bottom:2px;}
+
+  .main{max-width:1280px;margin:0 auto;padding:28px 24px 60px;}
+
+  .stats-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(155px,1fr));gap:14px;margin-bottom:28px;}
+  .stat-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:18px 20px;display:flex;align-items:flex-start;gap:12px;box-shadow:var(--shadow);transition:transform 0.2s,box-shadow 0.2s;}
+  .stat-card:hover{transform:translateY(-2px);box-shadow:var(--shadow-md);}
+  .stat-icon{width:42px;height:42px;border-radius:11px;display:flex;align-items:center;justify-content:center;font-size:19px;flex-shrink:0;}
+  .stat-num{font-size:26px;font-weight:700;line-height:1;font-variant-numeric:tabular-nums;}
+  .stat-label{font-size:12px;color:var(--text2);margin-top:4px;font-weight:500;}
+
+  .charts-grid{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-bottom:24px;}
+  @media(max-width:768px){.charts-grid{grid-template-columns:1fr;}}
+  .card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:22px;box-shadow:var(--shadow);}
+  .card-title{font-size:14px;font-weight:700;margin-bottom:16px;display:flex;align-items:center;gap:8px;}
+  .dot-indicator{width:8px;height:8px;border-radius:50%;background:var(--primary);display:inline-block;}
+  .chart-wrap{position:relative;height:220px;}
+  .cat-bars{display:flex;flex-direction:column;gap:10px;}
+  .cat-bar-label{display:flex;justify-content:space-between;font-size:12px;font-weight:600;margin-bottom:3px;}
+  .cat-bar-track{background:var(--border);border-radius:6px;height:9px;overflow:hidden;}
+  .cat-bar-fill{height:100%;border-radius:6px;transition:width 1s cubic-bezier(.4,0,.2,1);}
+
+  .controls{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:18px 22px;margin-bottom:18px;box-shadow:var(--shadow);}
+  .controls-row{display:flex;gap:12px;flex-wrap:wrap;align-items:center;}
+  .filter-row{margin-top:10px;display:flex;gap:8px;flex-wrap:wrap;align-items:center;}
+  .filter-label{font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:0.06em;margin-right:2px;}
+  .search-wrap{flex:1;min-width:200px;position:relative;}
+  .search-wrap input{width:100%;padding:10px 14px 10px 40px;border:1.5px solid var(--border);border-radius:var(--radius-sm);font-family:inherit;font-size:14px;background:var(--bg);color:var(--text);outline:none;transition:border-color 0.2s;}
+  .search-wrap input:focus{border-color:var(--primary);}
+  .search-icon{position:absolute;left:13px;top:50%;transform:translateY(-50%);color:var(--text3);font-size:15px;pointer-events:none;}
+  .filter-btn{padding:7px 13px;border-radius:20px;border:1.5px solid var(--border);background:var(--bg);color:var(--text2);font-family:inherit;font-size:12px;font-weight:600;cursor:pointer;transition:all 0.18s;white-space:nowrap;}
+  .filter-btn:hover{border-color:var(--primary);color:var(--primary);}
+  .filter-btn.active{background:var(--primary);border-color:var(--primary);color:#fff;}
+  .filter-btn.btn-awal.active{background:#e07a20;border-color:#e07a20;}
+  .filter-btn.btn-bertumbuh.active{background:#2e7a4a;border-color:#2e7a4a;}
+  .count-badge{font-size:11px;background:var(--primary-soft);color:var(--primary);border-radius:10px;padding:1px 6px;margin-left:3px;font-weight:700;}
+  .filter-btn.active .count-badge{background:rgba(255,255,255,0.25);color:#fff;}
+  .divider-v{width:1px;height:24px;background:var(--border);margin:0 4px;flex-shrink:0;}
+
+  .table-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow);overflow:hidden;}
+  .table-header-row{padding:16px 22px 14px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;}
+  .table-title{font-size:14px;font-weight:700;}
+  .table-info{font-size:12px;color:var(--text2);}
+  .table-wrap{overflow-x:auto;}
+  table{width:100%;border-collapse:collapse;}
+  thead th{background:var(--surface2);font-size:11px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:0.06em;padding:10px 16px;text-align:left;border-bottom:1px solid var(--border);white-space:nowrap;}
+  tbody tr{border-bottom:1px solid var(--border);transition:background 0.15s;cursor:pointer;}
+  tbody tr:hover{background:var(--surface2);}
+  tbody tr:last-child{border-bottom:none;}
+  td{padding:13px 16px;font-size:13px;vertical-align:top;line-height:1.5;}
+  .td-no{color:var(--text3);font-weight:600;width:36px;}
+  .td-name{font-weight:600;}
+  .td-nim{color:var(--text3);font-size:11px;margin-top:2px;}
+  .td-title{max-width:260px;}
+  .td-prodi{color:var(--text2);font-size:12px;margin-top:2px;}
+  .fak-chip{display:inline-flex;align-items:center;padding:2px 9px;border-radius:11px;font-size:11px;font-weight:700;white-space:nowrap;}
+  .cat-chip{display:inline-block;padding:2px 9px;border-radius:11px;font-size:11px;font-weight:600;background:#f0ece8;color:#555;white-space:nowrap;max-width:160px;overflow:hidden;text-overflow:ellipsis;}
+  .tahapan-badge{display:inline-flex;align-items:center;gap:4px;padding:3px 9px;border-radius:10px;font-size:11px;font-weight:700;white-space:nowrap;}
+  .tahapan-badge.awal{background:#fff0e0;color:#9a5200;}
+  .tahapan-badge.bertumbuh{background:#e0f5e8;color:#1e6b3e;}
+  .review-badge{display:inline-flex;align-items:center;gap:5px;padding:3px 9px;border-radius:10px;font-size:11px;font-weight:600;white-space:nowrap;}
+  .review-badge.has-review{background:#e0f0e5;color:#2e6b3e;}
+  .review-badge.no-review{background:#f0ece8;color:#888;}
+  .review-dot{width:6px;height:6px;border-radius:50%;flex-shrink:0;}
+  .has-review .review-dot{background:#4CAF50;}
+  .no-review .review-dot{background:#bbb;}
+  .highlight{background:#fff3a8;border-radius:2px;padding:0 1px;}
+
+  .modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.45);z-index:1000;align-items:center;justify-content:center;padding:20px;}
+  .modal-overlay.open{display:flex;}
+  .modal{background:var(--surface);border-radius:var(--radius);max-width:700px;width:100%;max-height:90vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,0.2);animation:modalIn 0.2s ease;}
+  @keyframes modalIn{from{transform:scale(0.96) translateY(10px);opacity:0}to{transform:none;opacity:1}}
+  .modal-head{padding:22px 26px 16px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:flex-start;gap:16px;}
+  .modal-proposal-meta{font-size:11px;color:var(--text3);font-weight:700;text-transform:uppercase;margin-bottom:6px;display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
+  .modal-title{font-family:'Fraunces',serif;font-size:16px;font-weight:600;line-height:1.45;}
+  .modal-close{width:30px;height:30px;border-radius:7px;border:1px solid var(--border);background:var(--bg);font-size:15px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;color:var(--text2);transition:background 0.15s;}
+  .modal-close:hover{background:var(--border);}
+  .modal-body{padding:20px 26px 26px;}
+  .modal-meta-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:20px;}
+  .modal-label{font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:3px;}
+  .modal-value{font-size:13px;color:var(--text);line-height:1.5;}
+  .review-divider{border:none;border-top:1px solid var(--border);margin:16px 0;}
+  .review-section{margin-top:4px;}
+  .review-section+.review-section{margin-top:14px;}
+  .review-header{display:flex;align-items:center;gap:8px;margin-bottom:8px;}
+  .review-label-tag{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.05em;padding:3px 10px;border-radius:20px;}
+  .r1-tag{background:#dce8f5;color:#3b6ea5;}
+  .r2-tag{background:#e0f0e5;color:#2e6b3e;}
+  .review-comment-box{background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-sm);padding:14px 16px;font-size:13px;color:var(--text);line-height:1.7;white-space:pre-wrap;word-break:break-word;}
+  .review-empty{font-size:13px;color:var(--text3);font-style:italic;padding:10px 0;}
+
+  .pagination{display:flex;align-items:center;justify-content:center;gap:5px;padding:18px;border-top:1px solid var(--border);flex-wrap:wrap;}
+  .page-btn{width:34px;height:34px;border-radius:7px;border:1.5px solid var(--border);background:var(--bg);color:var(--text2);font-family:inherit;font-size:13px;font-weight:600;cursor:pointer;transition:all 0.15s;display:flex;align-items:center;justify-content:center;}
+  .page-btn:hover{border-color:var(--primary);color:var(--primary);}
+  .page-btn.active{background:var(--primary);border-color:var(--primary);color:#fff;}
+  .page-btn:disabled{opacity:0.4;cursor:not-allowed;}
+  .empty-state{text-align:center;padding:60px 20px;color:var(--text3);}
+  .empty-state-icon{font-size:38px;margin-bottom:10px;}
+  .footer{text-align:center;padding:24px;font-size:12px;color:var(--text3);border-top:1px solid var(--border);}
+
+  /* Chips */
+  .fak-FIK{background:#dce8f5;color:#3b6ea5}.fak-FBS{background:#faeae0;color:#c0622a}
+  .fak-FISIP{background:#e0f0e5;color:#3e7a50}.fak-FT{background:#ece8f8;color:#6a5aad}
+  .fak-FMIPA{background:#fdf3da;color:#a07d20}.fak-FK{background:#fde8f0;color:#b0436a}
+  .fak-FH{background:#e8f5f0;color:#2a7a66}.fak-FIPP{background:#f0ece8;color:#7a5a3a}
+  .fak-FEB{background:#e8f0fc;color:#2a4a7a}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-inner">
+    <div class="header-badge">🏫 Universitas Negeri Semarang</div>
+    <h1>Dashboard Catatan Review P2MW 2026</h1>
+    <p class="header-sub">Program Pembinaan Mahasiswa Wirausaha — Data Pemenang Tingkat Universitas</p>
+    <div class="header-meta">
+      <div class="header-meta-item"><div class="dot"></div><span id="hdr-total">—</span></div>
+      <div class="header-meta-item"><div class="dot"></div><span id="hdr-awal">—</span></div>
+      <div class="header-meta-item"><div class="dot"></div><span id="hdr-bertumbuh">—</span></div>
+    </div>
+    <div class="notice-banner">
+      <strong>📌 Informasi untuk Mahasiswa</strong>
+      Klik nama proposal Anda untuk melihat catatan dan masukan dari reviewer. Gunakan masukan ini untuk memperbaiki proposal sebelum pengajuan berikutnya. Nama reviewer tidak ditampilkan.
+    </div>
+  </div>
+</div>
+
+<div class="main">
+
+  <!-- STATS -->
+  <div class="stats-grid">
+    <div class="stat-card">
+      <div class="stat-icon" style="background:#dce8f5">📋</div>
+      <div><div class="stat-num" id="stat-total">—</div><div class="stat-label">Total Proposal</div></div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon" style="background:#fff0e0">🌱</div>
+      <div><div class="stat-num" id="stat-awal">—</div><div class="stat-label">Tahapan Awal</div></div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon" style="background:#e0f5e8">🚀</div>
+      <div><div class="stat-num" id="stat-bertumbuh">—</div><div class="stat-label">Tahapan Bertumbuh</div></div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon" style="background:#e0f0e5">📂</div>
+      <div><div class="stat-num">6</div><div class="stat-label">Kategori</div></div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon" style="background:#fdf3da">🏛️</div>
+      <div><div class="stat-num" id="stat-fak">—</div><div class="stat-label">Fakultas</div></div>
+    </div>
+  </div>
+
+  <!-- CHARTS -->
+  <div class="charts-grid">
+    <div class="card">
+      <div class="card-title"><span class="dot-indicator"></span> Distribusi per Kategori</div>
+      <div class="cat-bars" id="cat-bars"></div>
+    </div>
+    <div class="card">
+      <div class="card-title"><span class="dot-indicator" style="background:var(--accent)"></span> Awal vs Bertumbuh per Kategori</div>
+      <div class="chart-wrap"><canvas id="bar-chart"></canvas></div>
+    </div>
+  </div>
+
+  <!-- CONTROLS -->
+  <div class="controls">
+    <div class="controls-row">
+      <div class="search-wrap">
+        <span class="search-icon">🔍</span>
+        <input type="text" id="search-input" placeholder="Cari nama, NIM, judul, program studi, kategori…">
+      </div>
+    </div>
+
+    <!-- Tahapan filter -->
+    <div class="filter-row">
+      <span class="filter-label">Tahapan:</span>
+      <button class="filter-btn active" data-tahapan="ALL" onclick="setTahapan('ALL')">
+        Semua <span class="count-badge" id="cnt-t-ALL">—</span>
+      </button>
+      <button class="filter-btn btn-awal" data-tahapan="Awal" onclick="setTahapan('Awal')">
+        🌱 Awal <span class="count-badge" id="cnt-t-Awal">—</span>
+      </button>
+      <button class="filter-btn btn-bertumbuh" data-tahapan="Bertumbuh" onclick="setTahapan('Bertumbuh')">
+        🚀 Bertumbuh <span class="count-badge" id="cnt-t-Bertumbuh">—</span>
+      </button>
+
+      <div class="divider-v"></div>
+
+      <!-- Kategori filter -->
+      <span class="filter-label">Kategori:</span>
+      <div id="cat-filter" style="display:flex;gap:7px;flex-wrap:wrap;"></div>
+    </div>
+  </div>
+
+  <!-- TABLE -->
+  <div class="table-card">
+    <div class="table-header-row">
+      <div class="table-title">📄 Daftar Proposal — Klik untuk melihat catatan reviewer</div>
+      <div class="table-info" id="table-info"></div>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>No</th>
+            <th>Mahasiswa</th>
+            <th>Judul Proposal</th>
+            <th>Kategori</th>
+            <th>Tahapan</th>
+            <th>Fak.</th>
+            <th>Catatan</th>
+          </tr>
+        </thead>
+        <tbody id="table-body"></tbody>
+      </table>
+      <div id="empty-state" class="empty-state" style="display:none">
+        <div class="empty-state-icon">🔎</div>
+        <p>Tidak ada proposal yang cocok dengan filter.</p>
+      </div>
+    </div>
+    <div class="pagination" id="pagination"></div>
+  </div>
+</div>
+
+<!-- MODAL -->
+<div class="modal-overlay" id="modal-overlay" onclick="closeModal(event)">
+  <div class="modal">
+    <div class="modal-head">
+      <div>
+        <div class="modal-proposal-meta" id="modal-meta"></div>
+        <div class="modal-title" id="modal-title"></div>
+      </div>
+      <button class="modal-close" onclick="closeModalDirect()">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="modal-meta-grid">
+        <div>
+          <div class="modal-label">Nama Ketua</div>
+          <div class="modal-value" id="modal-nama"></div>
+        </div>
+        <div>
+          <div class="modal-label">NIM</div>
+          <div class="modal-value" id="modal-nim"></div>
+        </div>
+        <div>
+          <div class="modal-label">Program Studi</div>
+          <div class="modal-value" id="modal-prodi"></div>
+        </div>
+        <div>
+          <div class="modal-label">Fakultas</div>
+          <div class="modal-value" id="modal-fak"></div>
+        </div>
+      </div>
+
+      <hr class="review-divider">
+
+      <div style="margin-bottom:14px">
+        <div style="font-size:13px;font-weight:700;color:var(--text)">💬 Catatan &amp; Masukan dari Reviewer</div>
+        <div style="font-size:12px;color:var(--text3);margin-top:3px">Gunakan catatan ini sebagai panduan perbaikan proposal Anda. Nama reviewer tidak ditampilkan.</div>
+      </div>
+
+      <div class="review-section">
+        <div class="review-header"><span class="review-label-tag r1-tag">Reviewer 1</span></div>
+        <div id="modal-r1"></div>
+      </div>
+      <div class="review-section">
+        <div class="review-header"><span class="review-label-tag r2-tag">Reviewer 2</span></div>
+        <div id="modal-r2"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="footer">Dashboard Catatan Review P2MW 2026 · Universitas Negeri Semarang · Data Pemenang Tingkat Universitas</div>
+
+<script>
+const RAW = [{"No": 1, "NIM": "2407120020", "Nama Ketua": "ALYA VEKA AZZAHRA", "Program Studi": "Pendidikan Administrasi Perkantoran, S1", "Fakultas": "FEB", "Judul Proposal": "ResQFood: Website Digital Food Rescue sebagai Solusi Cerdas Pengelolaan Makanan Surplus di Era Transformasi Teknologi", "Kategori": "Bisnis Digital", "Tahapan": "Awal", "r1_komentar": "Validitas Mitra (Sisi Penyuplai): ResQFood bergantung pada makanan surplus dari restoran/hotel, Tambahkan  fitur \"Sertifikasi Kelayakan\" atau batasan waktu konsumsi yang ketat dalam sistem aplikasi untuk melindungi platform secara hukum.\n\nJelaskan lebih detail mengenai skema \"Berlangganan\" (Subscription) yang disebutkan di bagian akhir. Apakah ini untuk konsumen atau untuk mitra restoran? Hal ini penting untuk menunjukkan arus kas (revenue stream) yang stabil.\n\nUntuk kategori Bisnis Digital, Anda perlu mempertimbangkan biaya untuk Pendaftaran PSE (Penyelenggara Sistem Elektronik) di Kominfo dan pendaftaran Merek (HAKI).Alokasikan sebagian dana untuk perlindungan kekayaan intelektual (merek ResQFood) agar tidak digunakan oleh pihak lain saat aplikasi mulai berkembang.\n\nAnda menyebutkan modal Rp 15.000.000 cukup untuk mencapai tahap MVP.Tunjukkan jadwal (timeline) pengembangan fitur per bulan secara lebih spesifik. Kapan fitur payment gateway diimplementasikan? Kapan sistem pelacakan (tracking) aktif? Hal ini menunjukkan kematangan perencanaan teknis.\n\nHal yang paling krusial untuk segera diperbaiki adalah sinkronisasi perhitungan angka pada tabel RAB di lampiran 4 agar tidak terjadi kesalahan matematis", "r2_komentar": "1. Ide menarik namun belum terlihat d tampilan web secara detail\n2. Penyusunan proposal tidak sesuai panduan\n2. analisis kompetitor kurang lengkap"}, {"No": 2, "NIM": "2301020024", "Nama Ketua": "Ahmad Rifian Maula Zaki", "Program Studi": "Teknologi Pendidikan, S1", "Fakultas": "FIPP", "Judul Proposal": "AKADEMI GURU KKA: Inovasi Platform Pelatihan KKA Terintegrasi AI dengan Konsep Digital Learning Ecosystem untuk Mendukung Quality Education", "Kategori": "Bisnis Digital", "Tahapan": "Bertumbuh", "r1_komentar": "1. Marketing Mix = jabarkan lebih detail terkait dengan 7P (untuk usaha jasa/layanan) : Product, Price, Promotion, Place, People, Process, Physical Evidence.", "r2_komentar": "ide bagus, proposal lengkap detail jelas, sertakan legalitas usaha seperti NIB, apakah sudah ada aplikasi sejenis, jika ada berikan penjelasan perbedaan atau inovatif dari aplikasi sejenis ini"}, {"No": 3, "NIM": "2501022712", "Nama Ketua": "Ahmad Fachri Nurfauzan", "Program Studi": "Teknologi Pendidikan, S1", "Fakultas": "FIPP", "Judul Proposal": "E-VR: INOVASI APLIKASI EDUKASI SEKSUAL ANAK USIA DINI BERBASIS VIRTUAL REALITY SEBAGAI SOLUSI PREVENTIF KEKERASAN SEKSUAL DI ERA DIGITAL", "Kategori": "Bisnis Digital", "Tahapan": "Bertumbuh", "r1_komentar": "1. Poin yang penting-peting mohon bisa di Bold agar reviewer mudah mencermati poin intinya\n2. Referensi harga pada RAB mohon di isi link yang berisi referensi harga produk. Mohon pastikan link tersebut bisa di akses oleh semua orang\n3. Mohon dibuatkan laporan keuangan yang menunjukkan adanya transaksi selama 6 bulan\n4. Mohon berikan analisis keuangan, seperti BEP, Payback Period, dll\n5. Mohon cek kembali jumlah nominal RAB", "r2_komentar": "ide aplikasi menarik, tambahkan poin sdgs pada tujuan mulia, belum ada laporan keuangan transaksi selama 6 bulan terakhir, berikan highlight atau bold pada poin poin penting"}, {"No": 4, "NIM": "2408010301", "Nama Ketua": "Albertus Haryo Saktiawan", "Program Studi": "Ilmu Hukum, S1", "Fakultas": "FH", "Judul Proposal": "INFERBIKAN : PUPUK CAIR FERMENTASI BERBAHAN DAUN PEPAYA DAN KENCUR SEBAGAI UPAYA PENINGKATAN PERTUMBUHAN DAN IMUNITAS IKAN BUDIDAYA", "Kategori": "Budidaya", "Tahapan": "Awal", "r1_komentar": "1. Ptoposla sudah lengkap\n2. Sudah ada ujicoba produk \n3. Bisa dipertimbangkan masuk bertumbuh dengan perbaikan RAB monetasi dll", "r2_komentar": "1. uji coba dilengkapi dengan angka, \n2. promosi di spesifikkan lagi mengenai konten, \n3. KPI, sdh ada usaha sblmnya mgkin bs ke tahap bertumbuh"}, {"No": 5, "NIM": "2307040175", "Nama Ketua": "Fransiska", "Program Studi": "", "Fakultas": "FEB", "Judul Proposal": "KOPI TUMAN: BIBIT KOPI ROBUSTA UNGGUL BERBASIS STEK LOKAL SEBAGAI STRATEGI PENINGKATAN PRODUKTIVITAS DAN KEBERLANJUTAN", "Kategori": "Budidaya", "Tahapan": "Bertumbuh", "r1_komentar": "1. latar belakang ditambahkan Berapa % bibit gagal 2. bagian inovasi diperkuat dengan kalimat belum adanya kompetitor yang mengkombinasikan robusta hutan dan tebusari lokal secara spesifik seperti kopi tuman 3.di bagian market belum ada data tentang sudahkah terbentuk royal customer atau data repeat order dari pelanggan misal dr berapa kelompok tani yang melakukan repeat order.\n4. pada tabel 7 laporan neraca utang bank sebesar 50jt mungkin dapat diberi penjelasan 5. proposal sdh lengkap", "r2_komentar": "1. Traction masih sebatas hitungan internal\nTidak ada bukti visual/eksternal, misalnya: foto transaksi atau nota; screenshot pesanan; Testimoni petani; bukti repeat order.\n2. Grafik penjualan hanya 1 tahun dan 1 lokasi, belum menunjukkan tren pertumbuhan lintas waktu. (REKOMENDASI: Tambahkan subjudul khusus: \"Bukti Traction & Validasi Pasar\"\nIsi minimal:  Jumlah pelanggan aktif (mis. 12 petani/kelompok); Repeat order (% atau narasi faktual); Testimoni singkat petani (1-2 kutipan)\nScreenshot penjualan (Shopee / WhatsApp / nota)\n3. Proposal sangat kuat di sisi teknis bibit, tetapi: PMF (kenapa konsumen memilih Kopi Tuman) masih deskriptif. Belum ada data perbandingan dengan pesaing secara kuantitatif (REKOMENDASI: Tambahkan 1 tabel ringkas: \nPerbandingan:\nTingkat hidup bibit (%)\nUmur mulai berbuah\nHarga\nAsal varietas)\n4. Risiko usaha dan mitigasi belum dibahas. Tidak ada risiko gagal stek; risiko serangan penyakit; risiko fluktuasi permintaan; risiko ketergantungan pada indukan lokal (REKOMENDASI: Tambahkan subbab kecil: \"Risiko Utama Usaha dan Strategi Mitigasi\" Isi 3-4 risiko utama + solusi.\nContoh:\nRisiko kegagalan stek \u2192 SOP & seleksi indukan\nRisiko cuaca \u2192 naungan & paranet\nRisiko pasar \u2192 kontrak awal dengan kelompok tani)\n5. RAB sudah sesuai aturan, tapi kurang narasi strategis. Belum menunjukkan: bagaimana RAB mendorong scale-up\nketerkaitan langsung RAB \u2192 target penjualan 6 bulan (REKOMENDASI: Tambahkan 1 paragraf penjelas sebelum tabel RAB: \"Penggunaan dana difokuskan untuk meningkatkan kapasitas produksi dari X bibit menjadi Y bibit per siklus, serta memperluas saluran distribusi ke minimal Z kelompok tani.\")\n6. Output P2MW belum tegas. Proposal sangat naratif .Tidak ada target kuantitatif selama program P2MW (6 bulan). (REKOMENDASI: Tambahkan Target Output P2MW 2026, misalnya:\nProduksi: 4.000 bibit\nPenjualan: \u2265 Rp 60 juta\nMitra aktif: 5 kelompok tani\nRasio hidup bibit: \u226590%)\n7. Konsistensi branding budidaya vs produk kopi hilir. Ini bukan kesalahan fatal, tapi rawan disalahpahami reviewer. Nama \"Kopi Tuman\" identik dengan kopi minuman, tapi kategori: Budidaya bibit kopi. (REOKMENDASI: Tekankan di awal: \"Kopi Tuman fokus pada budidaya bibit kopi sebagai usaha hulu, berbeda dengan usaha kopi olahan.\")"}, {"No": 6, "NIM": "2403070031", "Nama Ketua": "Riskiana Kuril Ain", "Program Studi": "", "Fakultas": "FISIP", "Judul Proposal": "PLANKTONFERT: PUPUK ORGANIK BERBASIS LIMBAH BERNUTRISI TINGGI SEBAGAI INOVASI PEMICU PLANKTON ALAMI UNTUK MENINGKATKAN PRODUKTIVITAS TAMBAK BANDENG", "Kategori": "Budidaya", "Tahapan": "Bertumbuh", "r1_komentar": "", "r2_komentar": "1. Di halaman awal & data tambahan, usaha dinyatakan: \"Tahapan Bertumbuh\" --> usaha berjalan sejak 2024 (\u00b13 tahun)\nTapi di Latar Belakang dan beberapa bagian lain masih tertulis: \"early stage\" dan  \"tahap pengembangan produk\" (REKOMENDASI : HAPUS seluruh istilah \"early stage\" GANTI dengan: \"PLANKTONFERT saat ini telah memasuki Tahapan Bertumbuh, ditandai dengan adanya penjualan, konsumen aktif, dan laporan keuangan sejak tahun 2024.\")\n2. Traction sudah ada, tapi: Masih naratif, belum angka-driven. Tidak ada: jumlah pelanggan pasti\nrepeat order testimoni tertulis / visual perbandingan sebelum-sesudah pemakaian (REKOMENDASI: Tambahkan satu subbab khusus: \"Bukti Traction & Product-Market Fit\"\nIsi minimal: Jumlah petambak pengguna (contoh: 12 mitra aktif); Total liter terjual (contoh: 320 botol @250 ml); Repeat order (% pengguna beli ulang); Hasil demplot (warna air \u2192 pertumbuhan ikan); Cut screenshot Shopee (penjualan) & testimoni WA)\n3. Saat ini NIB: \"proses\"; Tidak ada strategi izin edar pupuk. Tidak disebut: izin POC dan rencana uji Balai Perikanan, padahal produk pupuk cair budidaya masuk pengawasan teknis. (REKOMENDASI: Tambahkan sub-bab: \"Roadmap Legalitas & Standarisasi Produk\"\nIsi: NIB (bulan 1); Uji kandungan (Unnes / Balai Perikanan); Standar label pupuk organik dan QR edukasi penggunaan)\n4. Bisa lebih diringkas bagian: Noble purpose (cukup 1 halaman); Strategi pemasaran (hindari pengulangan). Bisa dipertahankan bagian: traction; rencana scaling; RAB & dampak\n5. Saat ini target masih deskriptif. (REKOMENDASI: bisa dibuat lebih terukur indikatornya, tambahkan KPI 6 Bulan. Contoh:\nProduksi: 1.500 botol\nPenjualan: 300 botol\nMitra aktif: 20 petambak\nPenurunan biaya pakan: \u00b120%)"}, {"No": 7, "NIM": "2408010607", "Nama Ketua": "TITHANIA PUTRI TRISNAWATI", "Program Studi": "Ilmu Hukum, S1", "Fakultas": "FH", "Judul Proposal": "SINASARA: AKSARA SHAPE SORTER SEBAGAI MEDIA STIMULASI KOGNITIF RAMAH TUNANETRA BERBAHAN LIMBAH KAYU DAN KONVEKSI DALAM UPAYA PERWUJUDAN SDG'S 4", "Kategori": "Industri Kreatif Seni Budaya", "Tahapan": "Awal", "r1_komentar": "1. Tujuan mulia belum logis dengan realita\n2. belum ada tanda tangan\n3.  diagram TAM SAM SOM kurang menarik\n4. analisis kompetitor kurang lengkap", "r2_komentar": "APE ecofriendly untuk anak berkebutuhan khusus\nSesuaikan kembali RAB dan struktur proposal"}, {"No": 8, "NIM": "2302130067", "Nama Ketua": "NABILAH SYIFA FURITA", "Program Studi": "Pendidikan Seni Drama, Tari, dan Musik (Pendidikan Seni Tari), S1", "Fakultas": "FBS", "Judul Proposal": "Carakaning Nata: Sanggar Seni Triwiyata Budaya", "Kategori": "Industri Kreatif Seni Budaya", "Tahapan": "Bertumbuh", "r1_komentar": "target  market masih estimasi, target omset terlalu besar jauh dr aktual yg sdh dlksankn", "r2_komentar": "-\tCek template pada bagian keuangan, traction dan monetisasi (Pada bagian ini menjelaskan kegiatan yang akan dilakukan selama program dan rencana penggunaan anggaran. Rencana kegiatan yang disusun harus mengacu pada penjelasan pada Bab II Deskripsi Usaha.)\n-\tDalam noble purpose belum mengaitkan dengan SDGs, asta cita presiden dan wakil presiden Republik Indonesia dan penelitian dosen dari UNNES\n-\tPerlu penjelasan  lebih detail tentang bagaimana sanggar ini beroperasi. Tuangkan Sejarah pendirian usaha ini di latar belakang\n-\tCek lagi pada lampiran yang dibutuhkan. Jangan sampai double lampiran\nuntuk laporan arus kas  dan laba rugi per  tanggal dari bulan awal hingga bulan terbaru"}, {"No": 9, "NIM": "2402110036", "Nama Ketua": "FARIDA MELINA SARI", "Program Studi": "Pendidikan Seni Rupa, S1", "Fakultas": "FBS", "Judul Proposal": "SAKASISA: PEMANFAATAN LIMBAH ORGANIK AGROINDUSTRI SEBAGAI MATERIAL ECO-CLAY TERINTEGRASI TEKNOLOGI NEAR FIELD COMMUNICATION (NFC) DALAM MENDUKUNG ECOTOURISM BERBASIS INDUSTRI KREATIF", "Kategori": "Industri Kreatif Seni Budaya", "Tahapan": "Bertumbuh", "r1_komentar": "Produk berupa sovenir dengan karakter promosi wisata dari limbah  agroindustri, belum\nmenunjukkan berapa lama usaha sudah berjalan\n\nPerlu diperjelas berapa lama usaha sudah berjalan dan track penjualannya", "r2_komentar": "Sebagai proposal di Tahapan Bertumbuh dengan integrasi teknologi, tim wajib memastikan durabilitas material eco-clay terhadap kelembapan dan suhu agar komponen NFC di dalamnya tetap berfungsi dalam jangka panjang."}, {"No": 10, "NIM": "2309020005", "Nama Ketua": "DLIYA LAELA EKA MEVIANA", "Program Studi": "Kesehatan Masyarakat (Epidemiologi), S1", "Fakultas": "FK", "Judul Proposal": "Kiddybooks: Inovasi Buku Interaktif Berbasis Storytelling sebagai Literasi Risiko Kesehatan untuk Anak", "Kategori": "Jasa Perdagangan Pariwisata", "Tahapan": "Awal", "r1_komentar": "Produk sudah ada namun bentuk interaktif belum bervariasi\n2. kesalahan ketik : e-commerse, \n3. Terjemahan bahasa inggris belum maksimal", "r2_komentar": "- produk memiliki kesempatan untuk lebih dioptimalkan sehingga memiliki keunikan yang lebih menonjol\n- salah satu keunikan produk yang disebutkan adalah \"melihat langsung akibat dari pilihan\ntindakan\", namun dalam buku cerita belum tergambar karena anak hanya diberi 1 pilihan tanpa perbandingan\n- - pada halaman awal, sertakan 2 kemungkinan tindakan yang bisa dilakukan anak, dengan risikonya masing - masing, misal jika ngemil coklat atau eskrim akan batuk, namun jika ngemil buah, maka akan lebih sehat dsb"}, {"No": 11, "NIM": "2402060029", "Nama Ketua": "Fatimatus Sadia", "Program Studi": "Pendidikan Bahasa Perancis, S1", "Fakultas": "FBS", "Judul Proposal": "OLA COURSE : BELAJAR ONLINE BAHASA ASING MENYENANGKAN MELALUI MULTIMEDIA", "Kategori": "Jasa Perdagangan Pariwisata", "Tahapan": "Bertumbuh", "r1_komentar": "Proposal lengkap, usaha sudah berjalan, memilki NIB, berpotensi untuk mudah dikembangkan dan dijalankan", "r2_komentar": "dilengkapi data sttistik"}, {"No": 12, "NIM": "2307040257", "Nama Ketua": "ANDHITA DEA WAHYU AMANDA", "Program Studi": "Ekonomi Pembangunan, S1", "Fakultas": "FEB", "Judul Proposal": "FLORENT TABLE DECOR: Inovasi Eco-Decor Meja Intimate", "Kategori": "Jasa Perdagangan Pariwisata", "Tahapan": "Bertumbuh", "r1_komentar": "Proposal lengkap hingga lampiran, usaha sudah berjalan, sudah memiliki NIB, memiliki mitra dalam produksi barang dari enceng gondok", "r2_komentar": "Usaha bergerak di jasa dekorasi untuk acara, usaha sudah berjalan 7 bulan dan ada NIB\nTonjolkan inovasi yang akan dilakukan di proposal ini"}, {"No": 13, "NIM": "2306010060", "Nama Ketua": "Febryan Aji Nugroho", "Program Studi": "Pendidikan Jasmani, Kesehatan, dan Rekreasi, S1", "Fakultas": "FIK", "Judul Proposal": "Nusantara HerbaGum: Mengubah Rempah Tradisional menjadi Modern Gummy Supplements untuk Daily Energy, Immunity Support, dan Wellness Optimal bagi Athletes, Professionals, dan Keluarga Sehat", "Kategori": "Makanan Minuman", "Tahapan": "Awal", "r1_komentar": "Produk oke, meski belum ada gambar real, tetapi masih mungkin bisa diwujudkan.\nKeuangan tidak lengkap", "r2_komentar": "latar belakang masih perlu dipertajam, noble purpose kurang sesuai jika berkaitan dengan produk yang akan diperdagangkan dan juga konsumen sasaran. Konsumen potensial bisa lebih dispesifikkan saja ke atlet dan penggiat olahraga. Pemilihan kompetitor produk kurang relevan jika dibandingkan dengan kompetitor yang produknya dibuat dari bahan sintetis. Jika produk ini dimaksudkan sebagai suplemen, berarti dosisnya perlu menjadi perhatian yang utama. Gambar produk belum ada jadi kemungkinan besar masih berupa prototype belum siap jual. proses produksi juga tidak dijabarkan dengan jelas dan detil."}, {"No": 14, "NIM": "4201422003", "Nama Ketua": "NOVI YULIANTI", "Program Studi": "Pendidikan Fisika, S1", "Fakultas": "FMIPA", "Judul Proposal": "ECOJEL Fusion Series: Diversifikasi Produk Jelly Gummy Multirasa Berbasis Limbah Albedo Semangka dengan Smart Food Biodegradable Packaging untuk Mendukung Green Entrepreneurship", "Kategori": "Makanan Minuman", "Tahapan": "Bertumbuh", "r1_komentar": "- tidak ada mitra\n- tidak ada rencana peningkatan kompetensi tim\n-", "r2_komentar": ""}, {"No": 15, "NIM": "2303070073", "Nama Ketua": "FADIA AUNI FIRZANA", "Program Studi": "Pendidikan Sosiologi dan Antropologi, S1", "Fakultas": "FISIP", "Judul Proposal": "VITA-CHUE : INOVASI HIGH FIBER BOBA BERBASIS KOLANG-KOLING SEBAGAI ALTERNATIF TOPPING MINUMAN SEHAT", "Kategori": "Makanan Minuman", "Tahapan": "Bertumbuh", "r1_komentar": "Tujuan mulia masih retorika tanpa rencana aksi dan metrik evaluasi yang konkret.\n\n Tidak ada analisis TAM/SAM/SOM, ukuran pasar, atau analisis kompetitor mendalam terhadap boba sehat lain yang mungkin sudah ada.\n\nTekankan pada aspek tekstur. Kolang-kaling memiliki tekstur khas yang berbeda dengan tapioka. Jelaskan apakah VITA-CHUE ini tetap chewy (kenyal) seperti boba pada umumnya atau lebih menyerupai jelly. Hal ini penting untuk meyakinkan konsumen penikmat boba konvensional.\n\nPastikan alokasi dana tidak habis hanya untuk membeli bahan baku harian. Alokasikan lebih banyak pada peralatan produksi permanen (seperti mesin pembuat boba otomatis atau vacuum sealer) dan legalitas.\n\nTambahkan dokumentasi foto produk asli hasil percobaan tim, bukan gambar referensi dari internet.\n\nApakah Anda akan menjual produk ini langsung ke konsumen akhir (B2C) dalam bentuk minuman jadi, atau menjual bahan bakunya (B2B) ke kedai-kedai minuman? fokuslah pada satu model bisnis utama agar strategi pemasarannya lebih tajam. Jika B2B, sertakan rencana kerja sama dengan mitra kedai lokal.", "r2_komentar": "latar belakang dan noble purpose cukup bagus untuk mengusung keunggulan bisnis yang akan dijalankan. hanya saja sangat disayangkan sekali kenapa hanya membuat kolang-kaling ini sebagai boba nya saja, bukan sebagai minuman komplit. jika hanya sebagai boba nya saja berarti ini bukan sajian lengkap tapi masih berupa bagian dari komposisi minuman. \nSilahkan dicek kembali, yg digunakan ini kolang-kaling segar atau tepung kolang-kaling? karena tidak konsisten. usaha ini usaha makanan atau parfum?"}, {"No": 16, "NIM": "2407030132", "Nama Ketua": "ZADIRA KEIZA ALYKHA SIDIK", "Program Studi": "Manajemen, S1", "Fakultas": "FEB", "Judul Proposal": "SIPADI: Sistem Monitoring Irigasi Air dan Hama Terjangkau Berbasis Sensor Ultrasonik Waterproof JSN-SR04T dan Sensor PIR Melalui SMS sebagai Optimalisasi Metode AWD pada Lahan Pertanian Padi", "Kategori": "Manufaktur dan Teknologi Terapan", "Tahapan": "Awal", "r1_komentar": "Proposal menyebutkan penggunaan SMS sebagai media notifikasi. yakin SMS? Pertimbangkan untuk menggunakan Telegram Bot atau WhatsApp Gateway yang berbasis data internet (IoT).\n\nJelaskan lebih detail mengenai casing atau pelindung alat. Penggunaan sensor ultrasonik waterproof sudah bagus, tetapi pastikan komponen lain seperti baterai dan mikrokontroler terlindungi dengan standar minimal IP65.\n\nMasukkan biaya untuk PCB Printing (JLC PCB atau sejenisnya) agar alat tidak hanya berupa rakitan kabel di atas breadboard atau box plastik biasa. Produk manufaktur yang \"siap jual\" harus memiliki tampilan internal yang rapi dan profesional\n\nAlokasikan dana untuk pendaftaran Paten Sederhana atau Hak Cipta (Program Komputer).\n\nJelaskan siapa yang bertanggung jawab jika alat rusak saat disewa petani. Pertimbangkan model bisnis \"Penjualan Alat + Langganan Dashboard/Layanan Notifikasi\" untuk pendapatan jangka panjang yang lebih stabil\n\nMetode AWD (Alternate Wetting and Drying): Ini adalah poin keunggulan utama Anda. Saran: Perkuat narasi mengenai penghematan air. Sebutkan secara kuantitatif berapa persen air yang bisa dihemat. Hal ini sangat mendukung SDGs Poin 6 (Air Bersih) dan Poin 13 (Penanganan Perubahan Iklim), yang merupakan nilai tambah besar bagi reviewer.", "r2_komentar": "Inovasi produk masih berupa penggabungan dan penyempurnaan fitur yang sudah ada tanpa bukti orisinalitas teknis signifikan atau hasil uji coba lapangan yang mendalam.\nData keuangan tidak lengkap \nStrategi pemasaran dan rencana distribusi masih general.\nKembangkan strategi pemasaran yang lebih terukur dengan menetapkan target KPI spesifik (contoh: 100 pengikut aktif di media sosial dalam 3 bulan, konversi 5% dari demo lapangan menjadi penjualan) dan alokasikan budget promosi secara rinci."}, {"No": 17, "NIM": "2305070034", "Nama Ketua": "STIFANI APRILIA", "Program Studi": "Teknik Kimia, S1", "Fakultas": "FT", "Judul Proposal": "Savera: Foot spray Organik dari Paduan Ekstrak Daun Kecombrang dan Aloe Vera", "Kategori": "Manufaktur dan Teknologi Terapan", "Tahapan": "Bertumbuh", "r1_komentar": "Produk sudah ada, sebelumnya PKMK tahun 2025", "r2_komentar": "di latar belakang sepertinya bisa dipertajam lagi terkait pengembangan yang dilakukan apa, karena ini adalah tahapan bertumbuh, jadi sejak awal sudah harus terlihat bertumbuhnya dimana/pengembangannya dimana dibandingkan yang sebelumnya. \nkarena ini masuknya ke manufaktur dan teknologi terapan, dalam inovasi produk dijabarkan secara detil perbedaan produk ini dengan yang sebelumnya apa? harapannya tidak hanya dari segi penambahan kemasan saja, melainkan ada inovasi lainnya"}, {"No": 18, "NIM": "2407020366", "Nama Ketua": "Bagas Permana", "Program Studi": "Ekonomika dan Bisnis, S1", "Fakultas": "FEB", "Judul Proposal": "VERSASIRSA: Formulasi Spray Oral Berbasis Ekstrak Daun Sirsak (Annona muricata L.) sebagai Formula Antibakteri Penyebab Bau Mulut", "Kategori": "Manufaktur dan Teknologi Terapan", "Tahapan": "Bertumbuh", "r1_komentar": "penjelasan proses produksi belum lengkap", "r2_komentar": "1. Karena ini bertumbuh, pastikan fokus pada inovasi peningkatan bisnis.\n2. Lampiran NIB masih draft\n3. Perkuat lagi fokus CRM agar selaras dengan pembeli yang akan repeat order"}];
+
+const CAT_COLORS={'Bisnis Digital':'#3b6ea5','Budidaya':'#6b9e78','Industri Kreatif Seni Budaya':'#c0622a','Jasa Perdagangan Pariwisata':'#a07d20','Makanan Minuman':'#b0436a','Manufaktur dan Teknologi Terapan':'#6a5aad'};
+const FAK_COLORS={FEB:'#2a4a7a',FIPP:'#7a5a3a',FH:'#2a7a66',FBS:'#c0622a',FK:'#b0436a',FIK:'#3b6ea5',FMIPA:'#a07d20',FISIP:'#3e7a50',FT:'#6a5aad'};
+const PAGE_SIZE=15;
+
+let filtered=[...RAW], currentCat='ALL', currentTahapan='ALL', currentPage=1, searchQ='';
+
+function init(){
+  const nAwal=RAW.filter(r=>r.Tahapan==='Awal').length;
+  const nBertumbuh=RAW.filter(r=>r.Tahapan==='Bertumbuh').length;
+  document.getElementById('stat-total').textContent=RAW.length;
+  document.getElementById('stat-awal').textContent=nAwal;
+  document.getElementById('stat-bertumbuh').textContent=nBertumbuh;
+  document.getElementById('stat-fak').textContent=new Set(RAW.map(r=>r.Fakultas)).size;
+  document.getElementById('hdr-total').textContent=RAW.length+' proposal';
+  document.getElementById('hdr-awal').textContent=nAwal+' Tahapan Awal';
+  document.getElementById('hdr-bertumbuh').textContent=nBertumbuh+' Tahapan Bertumbuh';
+  document.getElementById('cnt-t-ALL').textContent=RAW.length;
+  document.getElementById('cnt-t-Awal').textContent=nAwal;
+  document.getElementById('cnt-t-Bertumbuh').textContent=nBertumbuh;
+  buildCatFilter();
+  buildCatBars();
+  buildBarChart();
+  renderTable();
+}
+
+function buildCatFilter(){
+  const counts={};
+  RAW.forEach(r=>{counts[r.Kategori]=(counts[r.Kategori]||0)+1;});
+  const container=document.getElementById('cat-filter');
+  // All button
+  const allBtn=document.createElement('button');
+  allBtn.className='filter-btn active'; allBtn.dataset.cat='ALL';
+  allBtn.innerHTML=`Semua <span class="count-badge" id="cnt-c-ALL">${RAW.length}</span>`;
+  allBtn.onclick=()=>setCat('ALL');
+  container.appendChild(allBtn);
+  Object.entries(counts).sort((a,b)=>b[1]-a[1]).forEach(([cat,cnt])=>{
+    const btn=document.createElement('button');
+    btn.className='filter-btn'; btn.dataset.cat=cat;
+    const short=cat.length>20?cat.substring(0,18)+'…':cat;
+    btn.innerHTML=`${short} <span class="count-badge">${cnt}</span>`;
+    btn.title=cat; btn.onclick=()=>setCat(cat);
+    container.appendChild(btn);
+  });
+}
+
+function buildCatBars(){
+  const counts={};
+  RAW.forEach(r=>{counts[r.Kategori]=(counts[r.Kategori]||0)+1;});
+  const max=Math.max(...Object.values(counts));
+  const sorted=Object.entries(counts).sort((a,b)=>b[1]-a[1]);
+  const container=document.getElementById('cat-bars');
+  sorted.forEach(([cat,cnt])=>{
+    const pct=Math.round(cnt/max*100);
+    const color=CAT_COLORS[cat]||'#888';
+    const short=cat.length>30?cat.substring(0,28)+'…':cat;
+    const div=document.createElement('div');
+    div.innerHTML=`<div class="cat-bar-label"><span title="${cat}">${short}</span><span>${cnt}</span></div>
+      <div class="cat-bar-track"><div class="cat-bar-fill" style="width:0%;background:${color}" data-pct="${pct}"></div></div>`;
+    container.appendChild(div);
+  });
+  setTimeout(()=>{document.querySelectorAll('.cat-bar-fill').forEach(el=>{el.style.width=el.dataset.pct+'%';});},100);
+}
+
+function buildBarChart(){
+  const cats=Object.keys(CAT_COLORS);
+  const awalData=cats.map(c=>RAW.filter(r=>r.Kategori===c&&r.Tahapan==='Awal').length);
+  const bertumbuhData=cats.map(c=>RAW.filter(r=>r.Kategori===c&&r.Tahapan==='Bertumbuh').length);
+  const shortCats=cats.map(c=>c.length>18?c.substring(0,16)+'…':c);
+  new Chart(document.getElementById('bar-chart').getContext('2d'),{
+    type:'bar',
+    data:{
+      labels:shortCats,
+      datasets:[
+        {label:'Awal',data:awalData,backgroundColor:'rgba(224,122,32,0.8)',borderRadius:4},
+        {label:'Bertumbuh',data:bertumbuhData,backgroundColor:'rgba(46,122,74,0.8)',borderRadius:4},
+      ]
+    },
+    options:{
+      responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{position:'top',labels:{font:{size:11,family:'Plus Jakarta Sans'},boxWidth:12,boxHeight:12}}},
+      scales:{
+        x:{ticks:{font:{size:10,family:'Plus Jakarta Sans'},maxRotation:30},grid:{display:false}},
+        y:{ticks:{font:{size:11},stepSize:1},grid:{color:'rgba(0,0,0,0.05)'},beginAtZero:true}
+      }
+    }
+  });
+}
+
+function setTahapan(t){
+  currentTahapan=t; currentPage=1;
+  document.querySelectorAll('.filter-btn[data-tahapan]').forEach(b=>b.classList.toggle('active',b.dataset.tahapan===t));
+  applyFilter();
+}
+function setCat(c){
+  currentCat=c; currentPage=1;
+  document.querySelectorAll('.filter-btn[data-cat]').forEach(b=>b.classList.toggle('active',b.dataset.cat===c));
+  applyFilter();
+}
+document.getElementById('search-input').addEventListener('input',function(){
+  searchQ=this.value.toLowerCase().trim(); currentPage=1; applyFilter();
+});
+
+function applyFilter(){
+  filtered=RAW.filter(r=>{
+    const matchT=currentTahapan==='ALL'||r.Tahapan===currentTahapan;
+    const matchC=currentCat==='ALL'||r.Kategori===currentCat;
+    const matchS=!searchQ||[r['Nama Ketua'],r['Judul Proposal'],r['Program Studi'],r.NIM,r.Kategori,r.Fakultas,r.Tahapan].some(v=>v.toLowerCase().includes(searchQ));
+    return matchT&&matchC&&matchS;
+  });
+  renderTable();
+}
+
+function renderTable(){
+  const start=(currentPage-1)*PAGE_SIZE;
+  const pageData=filtered.slice(start,start+PAGE_SIZE);
+  const tbody=document.getElementById('table-body');
+  const empty=document.getElementById('empty-state');
+  const info=document.getElementById('table-info');
+  if(!filtered.length){
+    tbody.innerHTML='';empty.style.display='';
+    info.textContent='0 proposal';document.getElementById('pagination').innerHTML='';
+    return;
+  }
+  empty.style.display='none';
+  info.textContent=`Menampilkan ${start+1}–${Math.min(start+PAGE_SIZE,filtered.length)} dari ${filtered.length} proposal`;
+
+  const hi=str=>{
+    if(!searchQ)return str;
+    const re=new RegExp(`(${searchQ.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')})`, 'gi');
+    return str.replace(re,'<mark class="highlight">$1</mark>');
+  };
+
+  tbody.innerHTML=pageData.map(r=>{
+    const hasAny=!!(r.r1_komentar||r.r2_komentar);
+    const badge=hasAny
+      ?`<span class="review-badge has-review"><span class="review-dot"></span>Ada</span>`
+      :`<span class="review-badge no-review"><span class="review-dot"></span>–</span>`;
+    const tahapanBadge=r.Tahapan==='Awal'
+      ?`<span class="tahapan-badge awal">🌱 Awal</span>`
+      :`<span class="tahapan-badge bertumbuh">🚀 Bertumbuh</span>`;
+    const shortCat=r.Kategori.length>22?r.Kategori.substring(0,20)+'…':r.Kategori;
+    return `<tr onclick="openModal(${RAW.indexOf(r)})">
+      <td class="td-no">${r.No}</td>
+      <td><div class="td-name">${hi(r['Nama Ketua'])}</div><div class="td-nim">${r.NIM}</div></td>
+      <td class="td-title"><div>${hi(r['Judul Proposal'])}</div><div class="td-prodi">${hi(r['Program Studi'])}</div></td>
+      <td><span class="cat-chip" title="${r.Kategori}">${hi(shortCat)}</span></td>
+      <td>${tahapanBadge}</td>
+      <td><span class="fak-chip fak-${r.Fakultas}">${r.Fakultas}</span></td>
+      <td>${badge}</td>
+    </tr>`;
+  }).join('');
+  renderPagination();
+}
+
+function renderPagination(){
+  const total=Math.ceil(filtered.length/PAGE_SIZE);
+  const pg=document.getElementById('pagination');
+  if(total<=1){pg.innerHTML='';return;}
+  let html=`<button class="page-btn" onclick="goPage(${currentPage-1})" ${currentPage===1?'disabled':''}>‹</button>`;
+  for(let i=1;i<=total;i++){
+    if(i===1||i===total||Math.abs(i-currentPage)<=1)html+=`<button class="page-btn ${i===currentPage?'active':''}" onclick="goPage(${i})">${i}</button>`;
+    else if(Math.abs(i-currentPage)===2)html+=`<span style="padding:0 4px;color:#999">…</span>`;
+  }
+  html+=`<button class="page-btn" onclick="goPage(${currentPage+1})" ${currentPage===total?'disabled':''}>›</button>`;
+  pg.innerHTML=html;
+}
+
+function goPage(n){
+  const total=Math.ceil(filtered.length/PAGE_SIZE);
+  if(n<1||n>total)return;
+  currentPage=n; renderTable();
+  document.querySelector('.table-card').scrollIntoView({behavior:'smooth',block:'start'});
+}
+
+function openModal(idx){
+  const r=RAW[idx];
+  const tahapanBadge=r.Tahapan==='Awal'
+    ?`<span class="tahapan-badge awal" style="font-size:10px">🌱 Awal</span>`
+    :`<span class="tahapan-badge bertumbuh" style="font-size:10px">🚀 Bertumbuh</span>`;
+  document.getElementById('modal-meta').innerHTML=`<span>Proposal #${r.No}</span> · <span>${r.Kategori}</span> · ${tahapanBadge}`;
+  document.getElementById('modal-title').textContent=r['Judul Proposal'];
+  document.getElementById('modal-nama').textContent=r['Nama Ketua'];
+  document.getElementById('modal-nim').textContent=r.NIM;
+  document.getElementById('modal-prodi').textContent=r['Program Studi'];
+  document.getElementById('modal-fak').innerHTML=`<span class="fak-chip fak-${r.Fakultas}">${r.Fakultas}</span>`;
+  document.getElementById('modal-r1').innerHTML=r.r1_komentar
+    ?`<div class="review-comment-box">${esc(r.r1_komentar)}</div>`
+    :`<div class="review-empty">Catatan dari Reviewer 1 belum tersedia.</div>`;
+  document.getElementById('modal-r2').innerHTML=r.r2_komentar
+    ?`<div class="review-comment-box">${esc(r.r2_komentar)}</div>`
+    :`<div class="review-empty">Catatan dari Reviewer 2 belum tersedia.</div>`;
+  document.getElementById('modal-overlay').classList.add('open');
+}
+const esc=s=>s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+function closeModal(e){if(e.target===document.getElementById('modal-overlay'))document.getElementById('modal-overlay').classList.remove('open');}
+function closeModalDirect(){document.getElementById('modal-overlay').classList.remove('open');}
+document.addEventListener('keydown',e=>{if(e.key==='Escape')document.getElementById('modal-overlay').classList.remove('open');});
+init();
+</script>
+</body>
+</html>
